@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-sample
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-sample
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  minReadySeconds: 5
+  template:
+    metadata:
+      labels:
+        app: api-sample
+    spec:
+      nodeSelector:
+        'beta.kubernetes.io/os': linux
+      containers:
+        - name: api-sample
+          image: bekube/api-sample:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1 
+          resources:
+            requests:
+              cpu: 250m
+            limits:
+              cpu: 500m
+          env:
+            - name: NODE_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: api-sample-config
+                  key: node_env
+            - name: NODE_PATH
+              valueFrom:
+                configMapKeyRef:
+                  name: api-sample-config
+                  key: node_path
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: api-sample-config
+                  key: port
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: api-sample-secret
+                  key: jwt_secret
+            - name: JWT_EXPIRES_IN
+              valueFrom:
+                configMapKeyRef:
+                  name: api-sample-config
+                  key: jwt_expires_in
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: api-sample-config
+                  key: db_host
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: api-sample-config
+                  key: db_port
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: api-sample-config
+                  key: db_name
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: api-sample-secret
+                  key: db_user
+            - name: DB_PWD
+              valueFrom:
+                secretKeyRef:
+                  name: api-sample-secret
+                  key: db_pwd
+            
